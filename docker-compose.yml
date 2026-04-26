@@ -1,0 +1,36 @@
+services:
+  trader-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.be
+    container_name: trader-backend
+    restart: always
+    ports:
+      - "9090:9090" # Prometheus metrics
+      - "8080:8080" # HTTP + WebSocket API
+    environment:
+      - ARBITRUM_RPC_HTTP=${ARBITRUM_RPC_HTTP:-}
+      - ARBITRUM_RPC_WS=${ARBITRUM_RPC_WS:-}
+      - BASE_RPC_HTTP=${BASE_RPC_HTTP:-}
+      - BASE_RPC_WS=${BASE_RPC_WS:-}
+      - POLYGON_RPC_HTTP=${POLYGON_RPC_HTTP:-}
+      - POLYGON_RPC_WS=${POLYGON_RPC_WS:-}
+      - PRIVATE_KEY=${PRIVATE_KEY:-}
+      - EXECUTION_MODE=${EXECUTION_MODE:-simulate}
+    # Mount config if local modifications are needed without rebuild
+    # volumes:
+    #   - ./config.yaml:/app/config.yaml
+
+  trader-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: trader-frontend
+    restart: always
+    ports:
+      - "3001:3001"
+    depends_on:
+      - trader-backend
+    environment:
+      - NODE_ENV=production
+      - BACKEND_URL=http://trader-backend:8080
